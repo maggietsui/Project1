@@ -105,40 +105,69 @@ class SmithWaterman(PairwiseAligner):
 		j: col index
 	Returns: score/arrows are filled in
 	'''
-	def fill_in(i, j, in_gap_x, in_gap_y):
+	def fill_in(i, j):
+		gap_open = -5
+		gap_extend = -1
 
-		match = self.scores[i-1,j-1] + self.smat.loc[self.seq1[i], self.seq2[j]]
+		# calculate match score
+		residue_score = self.smat.loc[self.seq1[i], self.seq2[j]]
+		match = self.scores[i-1,j-1] + residue_score
+		end_gapx = self.gapX[i-1,j-1] + residue_score
+		end_gapy = self.gapY[i-1,j-1] + residue_score
 
-		gap_x = max(self.scores[i,j-1] + gap_open + gap_extend,
+		match_score = max(match, end_gapx, end_gapy)
+		
+		
+		# calculate gap in X score
+		gapx_score = max(self.scores[i,j-1] + gap_open + gap_extend,
 			self.gapY[i,j-1] + gap_extend)
-		gapX[i,j] = gap_x
 
-		gap_y = max(self.scores[i-1,j] + gap_open + gap_extend,
+		# calculate gap in Y score
+		gapy_score = max(self.scores[i-1,j] + gap_open + gap_extend,
 			self.gapX[i-1,j] + gap_extend)
-		gapY[i,j] = gap_y
 
-		score = max(match, gap_x, gap_y)
+		score_dict = {"M":match_score, "Ix":gapx_score, "Iy":gapy_score}
 
-		# if there's a tie in gaps, just go with a gap in x
-		if score == gap_x == gap_y:
-			in_gap_x = True
-		else if score == gap_x:
-			in_gap_x = True
-		else if score == gap_y:
-			in_gap_y = True
+		# set negative scores to 0
+		for key in score_dict.keys():
+    		if score_dict[key] < 0:
+        		score_dict[key] = 0
+		self.scores[i,j] = score_dict["M"]
+		self.gapX[i,j] = score_dict["Ix"]
+		self.gapY[i,j] = score_dict["Iy"]
 
-		# reset in_gap_x or in_gap_y if gap is closed
+		max_score = max(score_dict.values())
 
-		# Fill in a zero if best score is negative
-		if score < 0:
-			score = 0
+		# fill in traceback mat with a dict of arrows (nonzero scores only)
+		if max_score != 0:
+			arrows = {}
+			# for max score (including ties), get the cell that it came from
+			max_mats = [k for k,v in score_dict.items() if v == max_score]
+				for mat in max_mats:
+					if mat == "M":
+						if max_score == match:
+							arrows["M"] = (i-1,j-1)
+						else if max_score == end_gapx:
+							arrows["Ix"] = (i-1,j-1)
+						else if max_score == end_gapy:
+							arrows["Iy"] = (i-1,j-1)
+					if mat == "Ix":
+						
+
+					if mat == "Iy":
+
+
+
+			self.traceback[i,j] = arrows
+
 		# update max if needed
-		if score >= self.scores[self.max]:
+		if max_score >= self.scores[self.max]:
 			self.max = (i,j)
 
-		# fill in arrow
-		if score != 0:
-			self.traceback[i,j] = 
+ 	
+ 	def traceback():
+ 		score = 0
+ 		return score
 
 
 class NeedlemanWunsch(PairwiseAligner):
