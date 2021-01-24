@@ -48,12 +48,16 @@ class PairwiseAligner:
 	Parameters:
 	Returns: score, gap X, gap Y, and traceback matrices
 	'''
-	def init_mats(seq1, seq2):
-		self.scores = np.empty(shape=(len(seq1),len(seq2)))
-		self.traceback = np.empty(shape=(len(seq1),len(seq2)))
-		self.gapX = np.empty(shape=(len(seq1),len(seq2)))
-		self.gapY = np.empty(shape=(len(seq1),len(seq2)))
+	def init_mats():
+		self.scores = np.empty(shape=(len(self.seq1),len(self.seq2)))
+		self.traceback = np.empty(shape=(len(self.seq1),len(self.seq2)))
+		self.gapX = np.empty(shape=(len(self.seq1),len(self.seq2)))
+		self.gapY = np.empty(shape=(len(self.seq1),len(self.seq2)))
 		# TODO: initialize()?
+
+	def set_seqs(seq1, seq2):
+		self.seq1 = read_sequence(seq1)
+		self.seq2 = read_sequence(seq2)
 
 	'''
 	 Align method: 
@@ -67,18 +71,18 @@ class PairwiseAligner:
 	 Returns: returns seq1 and seq2 with best alignment
 	'''
 	def align(self, seq1, seq2, with_score=False, readable=False)
-		seq1 = read_sequence(seq1)
-		seq2 = read_sequence(seq2)
+		set_seqs(seq1, seq2)
 
 		# initialize score matrix with seq1/seq2 
-		init_mats(seq1, seq2)
+		init_mats()
 
-		num_rows, num_cols = scores.shape
-		for i in range(num_rows):
-			for j in range(num_cols):
+		# loop through matrix, skipping boundary row/col
+		for i in range(1,len(self.seq1)):
+			for j in range(1,len(self.seq2)):
+				fill_in(i,j)
 
 
-		# for 
+		# traceback and return the score and alignment
 class SmithWaterman(PairwiseAligner):
 	self.max = tuple(0,0)
 
@@ -93,14 +97,52 @@ class SmithWaterman(PairwiseAligner):
 		scores[:,0] = 0
 
 		
+	'''
+	Fills in score in the scores matrix and arrow in the traceback
+	for the current cell
+	Parameters:
+		i: row index
+		j: col index
+	Returns: score/arrows are filled in
+	'''
+	def fill_in(i, j, in_gap_x, in_gap_y):
 
-	def get_score():
+		match = self.scores[i-1,j-1] + self.smat.loc[self.seq1[i], self.seq2[j]]
+
+		gap_x = max(self.scores[i,j-1] + gap_open + gap_extend,
+			self.gapY[i,j-1] + gap_extend)
+		gapX[i,j] = gap_x
+
+		gap_y = max(self.scores[i-1,j] + gap_open + gap_extend,
+			self.gapX[i-1,j] + gap_extend)
+		gapY[i,j] = gap_y
+
+		score = max(match, gap_x, gap_y)
+
+		# if there's a tie in gaps, just go with a gap in x
+		if score == gap_x == gap_y:
+			in_gap_x = True
+		else if score == gap_x:
+			in_gap_x = True
+		else if score == gap_y:
+			in_gap_y = True
+
+		# reset in_gap_x or in_gap_y if gap is closed
 
 		# Fill in a zero if best score is negative
+		if score < 0:
+			score = 0
 		# update max if needed
+		if score >= self.scores[self.max]:
+			self.max = (i,j)
+
+		# fill in arrow
+		if score != 0:
+			self.traceback[i,j] = 
+
 
 class NeedlemanWunsch(PairwiseAligner):
-	def initialize()
+	def initialize():
 		# initialize first row and column with gap cost
 
-	def get_score():
+	def fill_in(i,j):
