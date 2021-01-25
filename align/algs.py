@@ -205,32 +205,14 @@ class SmithWaterman(PairwiseAligner):
                 str2 = self.seq2[j-1] + str2
                 i = i-1
                 j = j-1
-                #if self.traceback[i,j] == "match":
-                #    current_val = self.scores[i,j]
-                #elif self.traceback[i,j] == "endgapx":
-                #    current_val = self.gapX[i,j]
-                #elif self.traceback[i,j] == "endgapy":
-                #    current_val = self.gapY[i,j]
-            elif self.traceback[i,j] == "opengapx":
-                str1 = "-" + str1
-                str2 = self.seq2[j-1] + str2
-                j = j-1
-                #current_val = self.scores[i,j]
-            elif self.traceback[i,j] == "extendgapx":
-                str1 = "-" + str1
-                str2 = self.seq2[j-1] + str2
-                j = j-1
-                #current_val = self.gapX[i,j]
-            elif self.traceback[i,j] == "opengapy":
-                str1 = self.seq1[i-1] + str1
+            elif self.traceback[i,j] == "opengapx" or self.traceback[i,j] == "extendgapx":
                 str2 = "-" + str2
-                i = i-1
-                #current_val = self.scores[i,j]
-            elif self.traceback[i,j] == "extendgapy":
                 str1 = self.seq1[i-1] + str1
-                str2 = "-" + str2
                 i = i-1
-                #current_val = self.gapY[i,j]
+            elif self.traceback[i,j] == "opengapy" or self.traceback[i,j] == "extendgapy":
+                str2 = self.seq2[j-1] + str1
+                str1 = "-" + str1
+                j = j-1
         
         alignment = str1 + '\n' + str2
         return self.score, alignment
@@ -257,6 +239,8 @@ class NeedlemanWunsch(PairwiseAligner):
         self.gapY[0,:] = list(range(len(self.gapY[0,:])))
         self.gapY[0,:] = [idx*self.gap_extend+self.gap_open for idx in self.gapY[0,:]]
         
+        self.traceback[0,1:] = "extendgapy"
+        self.traceback[1:,0] = "extendgapx"
     '''
     Fills in score in the scores matrix and arrow in the traceback
     for the current cell
@@ -328,28 +312,23 @@ class NeedlemanWunsch(PairwiseAligner):
         
         # traceback until you reach 0,0
         while i > 0 or j > 0:
+            #print(i,j)
+            #print(self.traceback[i,j])
+            #print(str1 + '\n' + str2)
             if self.traceback[i,j] == "match" or self.traceback[i,j] == "endgapx" or self.traceback[i,j] == "endgapy":
                 str1 = self.seq1[i-1] + str1
                 str2 = self.seq2[j-1] + str2
                 i = i-1
                 j = j-1
-            elif self.traceback[i,j] == "opengapx":
-                str1 = "-" + str1
-                str2 = self.seq2[j-1] + str2
-                j = j-1
-            elif self.traceback[i,j] == "extendgapx":
-                str1 = "-" + str1
-                str2 = self.seq2[j-1] + str2
-                j = j-1
-            elif self.traceback[i,j] == "opengapy":
-                str1 = self.seq1[i-1] + str1
+            elif self.traceback[i,j] == "opengapx" or self.traceback[i,j] == "extendgapx":
                 str2 = "-" + str2
-                i = i-1
-            elif self.traceback[i,j] == "extendgapy":
                 str1 = self.seq1[i-1] + str1
-                str2 = "-" + str2
                 i = i-1
-
+            elif self.traceback[i,j] == "opengapy" or self.traceback[i,j] == "extendgapy":
+                str2 = self.seq2[j-1] + str1
+                str1 = "-" + str1
+                j = j-1
+        
         
         alignment = str1 + '\n' + str2
         return self.score, alignment

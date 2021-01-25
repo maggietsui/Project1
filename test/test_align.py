@@ -30,16 +30,24 @@ def test_identical():
     nw = NeedlemanWunsch("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
     seq = "/Users/mtsui1/Documents/Classes/Algs/Project1/sequences/prot-0088.fa"
     score, alignment = nw.align(seq, seq)
-    assert score == 870
     assert alignment == "YGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ\nYGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ"
     
     sw = SmithWaterman("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
     seq = "/Users/mtsui1/Documents/Classes/Algs/Project1/sequences/prot-0088.fa"
     score, alignment = sw.align(seq, seq)
-    assert score == 870
     assert alignment == "YGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ\nYGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ"
     
 
 def test_alignment_score():
-    assert True
+    nw = NeedlemanWunsch("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
+    score, alignment = nw.align("./sequences/test1.fa", "./sequences/test2.fa")
+    assert score == 4
+    assert alignment == "BTN\nBT-"
+
+    
+    sw = SmithWaterman("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
+    score, alignment = sw.align("./sequences/test1.fa", "./sequences/test2.fa")
+    assert score == 10
+    assert alignment == "BT\nBT"
+
 
