@@ -1,5 +1,5 @@
 import pytest
-from align import algs
+from align.algs import *
 
 @pytest.fixture
 def create_pa_instance():
