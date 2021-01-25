@@ -43,19 +43,8 @@ class PairwiseAligner:
         scores.set_index(scores.columns, inplace=True)
         return scores
 
-    '''
-    Initialize matrices needed for alignment
-    Parameters:
-    Returns: score, gap X, gap Y, and traceback matrices
-    '''
-    def init_mats():
-        self.scores = np.empty(shape=(len(self.seq1),len(self.seq2)))
-        self.traceback = np.empty(shape=(len(self.seq1),len(self.seq2)))
-        self.gapX = np.empty(shape=(len(self.seq1),len(self.seq2)))
-        self.gapY = np.empty(shape=(len(self.seq1),len(self.seq2)))
-        # TODO: initialize()?
 
-    def set_seqs(seq1, seq2):
+    def set_seqs(self, seq1, seq2):
         self.seq1 = read_sequence(seq1)
         self.seq2 = read_sequence(seq2)
 
@@ -85,22 +74,34 @@ class PairwiseAligner:
                 fill_in(i,j)
 
         # traceback and return the score and alignment
-        return traceback(with_score, readable)
+        #return traceback(with_score, readable)
 
 class SmithWaterman(PairwiseAligner):
     def __init__(self, smat):
-        super().__init__(self, smat)
+        super().__init__(smat)
         self.max = (0,0)
 
     '''
     Method to initialize the score-keeping and traceback matrices.
     seq1 is initialized on the rows, while seq2 on the columns
-    Returns: two mat
+    Parameters:
+    Returns: score, gap X, gap Y, and traceback matrices
     '''
-    def initialize():
-        # initialize first row and column with zeroes
-        scores[0,:] = 0
-        scores[:,0] = 0
+    def init_mats(self):
+        self.scores = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
+        self.traceback = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
+        self.gapX = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
+        self.gapY = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
+        
+        self.scores[:,0] = 0
+        self.scores[0,:] = 0
+        
+        self.gapX[:,0] = 0
+        self.gapX[0,:] = 0
+        
+        self.gapY[:,0] = 0
+        self.gapY[0,:] = 0
+        # TODO: initialize()?
 
 
     '''
@@ -111,7 +112,7 @@ class SmithWaterman(PairwiseAligner):
         j: col index
     Returns: score/arrows are filled in
     '''
-    def fill_in(i, j):
+    def fill_in(self, i, j):
         gap_open = -5
         gap_extend = -1
 
@@ -147,31 +148,30 @@ class SmithWaterman(PairwiseAligner):
 
         # assign arrows (nonzero scores only)
         if max_score != 0:
-            arrows = {}
-            # for max score (including ties), get the cell that it came from
+            # for max score, get the cell that it came from
+            # to resolve ties, a match is preferred, then X gap, then Y gap
             max_mats = [k for k,v in score_dict.items() if v == max_score]
-            for mat in max_mats:
-                if mat == "M":
-                    if max_score == match:
-                        arrows[(i-1,j-1)] = "M"
-                    elif max_score == end_gapx:
-                        arrows[(i-1,j-1)] = "Ix"
-                    elif max_score == end_gapy:
-                        arrows[(i-1,j-1)] = "Iy"
-                if mat == "Ix":
-                    if max_score == gapx_open:
-                        arrows[(i,j-1)] = "M"
-                    else:
-                        arrows[(i,j-1)] = "Ix"
-                if mat == "Iy":
-                    if max_score == gapy_open:
-                        arrows[(i-1,j)] = "M"
-                    else:
-                        arrows[(i-1,j)] = "Iy"
+            if "M" in max_mats:
+                if max_score == match:
+                    arrow = (i-1,j-1,"M")
+                elif max_score == end_gapx:
+                    arrow = (i-1,j-1,"Ix")
+                elif max_score == end_gapy:
+                    arrow = (i-1,j-1,"Iy")
+            elif "Ix" in max_mats:
+                if max_score == gapx_open:
+                    arrow = (i,j-1,"M")
+                else:
+                    arrow = (i,j-1,"Ix")
+            elif "Iy" in max_mats:
+                if max_score == gapy_open:
+                    arrow = (i-1,j,"M")
+                else:
+                    arrow = (i-1,j,"Iy")
 
 
 
-            self.traceback[i,j] = arrows
+            self.traceback[i,j] = arrow
 
         # update max if needed
         if max_score >= self.scores[self.max]:
@@ -179,14 +179,30 @@ class SmithWaterman(PairwiseAligner):
 
 
     def traceback():
-        pass
+        # a match
+        if self.traceback[i,j] == "match":
+            self.scores[i-1,j-1]
+        if self.traceback[i,j] == "endgapx":
+            self.gapX[i-1,j-1]
+        if self.traceback[i,j] == "endgapy":
+            self.gapY[i-1,j-1]
+        if self.traceback[i,j] == "opengapx":
+            self.scores[i,j-1]
+        if self.traceback[i,j] == "extendgapx":
+            self.gapX[i,j-1]
+        if self.traceback[i,j] == "opengapy":
+            self.scores[i-1,j]
+        if self.traceback[i,j] == "extendgapy":
+            self.gapY[i-1,j]
+            
         #score = 0
+        self.score = score
         #return score
 
 
 class NeedlemanWunsch(PairwiseAligner):
     def __init__(self, smat):
-        super().__init__(self, smat)
+        super().__init__(smat)
         
     def initialize():
         pass
