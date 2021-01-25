@@ -69,12 +69,12 @@ class PairwiseAligner:
         init_mats()
 
         # loop through matrix, skipping boundary row/col
-        for i in range(1,len(self.seq1)):
-            for j in range(1,len(self.seq2)):
+        for i in range(1,len(self.seq1)+1):
+            for j in range(1,len(self.seq2)+1):
                 fill_in(i,j)
-
+        
         # traceback and return the score and alignment
-        #return traceback(with_score, readable)
+        return traceback(with_score)
 
 class SmithWaterman(PairwiseAligner):
     def __init__(self, smat):
@@ -89,7 +89,7 @@ class SmithWaterman(PairwiseAligner):
     '''
     def init_mats(self):
         self.scores = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
-        self.traceback = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
+        self.traceback = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1),dtype=object)
         self.gapX = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
         self.gapY = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
         
@@ -117,7 +117,7 @@ class SmithWaterman(PairwiseAligner):
         gap_extend = -1
 
         # calculate match score
-        residue_score = self.smat.loc[self.seq1[i], self.seq2[j]]
+        residue_score = self.smat.loc[self.seq1[i-1], self.seq2[j-1]]
         match = self.scores[i-1,j-1] + residue_score
         end_gapx = self.gapX[i-1,j-1] + residue_score
         end_gapy = self.gapY[i-1,j-1] + residue_score
@@ -140,6 +140,7 @@ class SmithWaterman(PairwiseAligner):
         for key in score_dict.keys():
             if score_dict[key] < 0:
                 score_dict[key] = 0
+        #print(score_dict)
         self.scores[i,j] = score_dict["M"]
         self.gapX[i,j] = score_dict["Ix"]
         self.gapY[i,j] = score_dict["Iy"]
@@ -153,52 +154,79 @@ class SmithWaterman(PairwiseAligner):
             max_mats = [k for k,v in score_dict.items() if v == max_score]
             if "M" in max_mats:
                 if max_score == match:
-                    arrow = (i-1,j-1,"M")
+                    self.traceback[i,j] = "match"
                 elif max_score == end_gapx:
-                    arrow = (i-1,j-1,"Ix")
+                    self.traceback[i,j] = "endgapx"
                 elif max_score == end_gapy:
-                    arrow = (i-1,j-1,"Iy")
+                    self.traceback[i,j] = "endgapy"
             elif "Ix" in max_mats:
                 if max_score == gapx_open:
-                    arrow = (i,j-1,"M")
+                    self.traceback[i,j] = "opengapx"
                 else:
-                    arrow = (i,j-1,"Ix")
+                    self.traceback[i,j] = "extendgapx"
             elif "Iy" in max_mats:
                 if max_score == gapy_open:
-                    arrow = (i-1,j,"M")
+                    self.traceback[i,j] = "opengapy"
                 else:
-                    arrow = (i-1,j,"Iy")
-
-
-
-            self.traceback[i,j] = arrow
+                    self.traceback[i,j] = "extendgapy"
 
         # update max if needed
         if max_score >= self.scores[self.max]:
             self.max = (i,j)
 
 
-    def traceback():
-        # a match
-        if self.traceback[i,j] == "match":
-            self.scores[i-1,j-1]
-        if self.traceback[i,j] == "endgapx":
-            self.gapX[i-1,j-1]
-        if self.traceback[i,j] == "endgapy":
-            self.gapY[i-1,j-1]
-        if self.traceback[i,j] == "opengapx":
-            self.scores[i,j-1]
-        if self.traceback[i,j] == "extendgapx":
-            self.gapX[i,j-1]
-        if self.traceback[i,j] == "opengapy":
-            self.scores[i-1,j]
-        if self.traceback[i,j] == "extendgapy":
-            self.gapY[i-1,j]
-            
-        #score = 0
-        self.score = score
-        #return score
-
+    def do_traceback(self):
+        i = self.max[0]
+        j = self.max[1]
+        self.score = self.scores[i, j]
+        
+        # start traceback at max value
+        current_val = self.scores[self.max[0], self.max[1]]
+        str1 = ""
+        str2 = ""
+        while current_val > 0:
+            if self.traceback[i,j] == "match":
+                str1 = self.seq1[i-1] + str1
+                str2 = self.seq2[j-1] + str2
+                i = i-1
+                j = j-1
+                current_val = self.scores[i,j]
+            elif self.traceback[i,j] == "endgapx":
+                str1 = self.seq1[i-1] + str1
+                str2 = self.seq2[j-1] + str2
+                i = i-1
+                j = j-1
+                current_val = self.gapX[i,j]
+            elif self.traceback[i,j] == "endgapy":
+                str1 = self.seq1[i-1] + str1
+                str2 = self.seq2[j-1] + str2
+                i = i-1
+                j = j-1
+                current_val = self.gapY[i,j]
+            elif self.traceback[i,j] == "opengapx":
+                str1 = "-" + str1
+                str2 = self.seq2[j-1] + str2
+                j = j-1
+                current_val = self.scores[i,j]
+            elif self.traceback[i,j] == "extendgapx":
+                str1 = "-" + str1
+                str2 = self.seq2[j-1] + str2
+                j = j-1
+                current_val = self.gapX[i,j]
+            elif self.traceback[i,j] == "opengapy":
+                str1 = self.seq1[i-1] + str1
+                str2 = "-" + str2
+                i = i-1
+                current_val = self.scores[i,j]
+            elif self.traceback[i,j] == "extendgapy":
+                str1 = self.seq1[i-1] + str1
+                str2 = "-" + str2
+                i = i-1
+                current_val = self.gapY[i,j]
+        
+        print(current_val)
+        alignment = str1 + '\n' + str2
+        return self.score, alignment
 
 class NeedlemanWunsch(PairwiseAligner):
     def __init__(self, smat):
