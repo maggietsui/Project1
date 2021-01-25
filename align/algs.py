@@ -130,13 +130,13 @@ class SmithWaterman(PairwiseAligner):
         match_score = max(match, end_gapx, end_gapy)
 
         # calculate gap in X score
-        gapx_open = self.scores[i,j-1] + self.gap_open + self.gap_extend
-        gapx_extend = self.gapX[i,j-1] + self.gap_extend
+        gapx_open = self.scores[i-1,j] + self.gap_open + self.gap_extend
+        gapx_extend = self.gapX[i-1,j] + self.gap_extend
         gapx_score = max(gapx_open, gapx_extend)
 
         # calculate gap in Y score
-        gapy_open = self.scores[i-1,j] + self.gap_open + self.gap_extend
-        gapy_extend = self.gapY[i-1,j] + self.gap_extend
+        gapy_open = self.scores[i,j-1] + self.gap_open + self.gap_extend
+        gapy_extend = self.gapY[i,j-1] + self.gap_extend
         gapy_score = max(gapy_open, gapy_extend)
 
         score_dict = {"M":match_score, "Ix":gapx_score, "Iy":gapy_score}
