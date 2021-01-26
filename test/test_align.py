@@ -3,7 +3,7 @@ from align.algs import *
 
 @pytest.fixture
 def create_pa_instance():
-    return PairwiseAligner("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
+    return PairwiseAligner("/scoring_matrices/BLOSUM50.mat")
 
 def test_fasta_io():
     pa = create_pa_instance()
