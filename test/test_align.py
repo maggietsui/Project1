@@ -2,11 +2,8 @@ import pytest
 from align.algs import *
 
 @pytest.fixture
-def create_pa_instance():
-    return PairwiseAligner("scoring_matrices/BLOSUM50.mat")
-
 def test_fasta_io():
-    pa = create_pa_instance()
+    pa = PairwiseAligner("scoring_matrices/BLOSUM50.mat")
     file1 = "test_data/prot-0088.fa"
     file2 = "test_data/prot-0004.fa"
     pa.set_seqs(file1, file2)
@@ -16,7 +13,7 @@ def test_fasta_io():
     assert pa.get_seq2() == "SLEAAQKSNVTSSWAKASAAWGTAGPEFFMALFDAHDDVFAKFSGLFSGAAKGTVKNTPEMAAQAQSFKGLVSNWVDNLDNAGALEGQCKTFAANHKARGISAGQLEAAFKVLSGFMKSYGGDEGAWTAVAGALMGEIEPDM"
 
 def test_scoring_matrix_io():
-    pa = create_pa_instance()
+    pa = PairwiseAligner("scoring_matrices/BLOSUM50.mat")
     m = pa.get_score_mat()
     assert m.shape == (24, 24)
     assert not m.empty
