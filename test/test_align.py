@@ -7,8 +7,8 @@ def create_pa_instance():
 
 def test_fasta_io():
     pa = create_pa_instance()
-    file1 = "/Users/mtsui1/Documents/Classes/Algs/Project1/sequences/prot-0088.fa"
-    file2 = "/Users/mtsui1/Documents/Classes/Algs/Project1/sequences/prot-0004.fa"
+    file1 = "/test_data/prot-0088.fa"
+    file2 = "/test_data/prot-0004.fa"
     pa.set_seqs(file1, file2)
     assert pa.get_seq1().isupper()
     assert pa.get_seq2().isupper()
@@ -27,26 +27,26 @@ def test_identical():
     # Using gap opening -5 and gap extension -1 (default)
     # Checked score using https://www.ebi.ac.uk/Tools/psa/emboss_needle/
 
-    nw = NeedlemanWunsch("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
-    seq = "/Users/mtsui1/Documents/Classes/Algs/Project1/sequences/prot-0088.fa"
+    nw = NeedlemanWunsch("/scoring_matrices/BLOSUM50.mat")
+    seq = "/test_data/prot-0088.fa"
     score, alignment = nw.align(seq, seq)
     assert alignment == "YGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ\nYGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ"
     
-    sw = SmithWaterman("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
-    seq = "/Users/mtsui1/Documents/Classes/Algs/Project1/sequences/prot-0088.fa"
+    sw = SmithWaterman("/scoring_matrices/BLOSUM50.mat")
+    seq = "/test_data/prot-0088.fa"
     score, alignment = sw.align(seq, seq)
     assert alignment == "YGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ\nYGKNQREAAQMDMVNDGVEDLRGKYVTLIYTNYENGKNDYVKALPGHLKPFETLLSQNQGGKAFIVGDQISFADYNLLDLLLIHQVLAPGCLDNFPLLSAYVARLSARPKIKAFLSSPEHVNRPINGNGKQ"
     
 
 def test_alignment_score():
-    nw = NeedlemanWunsch("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
-    score, alignment = nw.align("./sequences/test1.fa", "./sequences/test2.fa")
+    nw = NeedlemanWunsch("/scoring_matrices/BLOSUM50.mat")
+    score, alignment = nw.align("/test_data/test1.fa", "/test_data/test2.fa")
     assert score == 4
     assert alignment == "BTN\nBT-"
 
     
-    sw = SmithWaterman("/Users/mtsui1/Documents/Classes/Algs/Project1/scoring_matrices/BLOSUM50.mat")
-    score, alignment = sw.align("./sequences/test1.fa", "./sequences/test2.fa")
+    sw = SmithWaterman("/scoring_matrices/BLOSUM50.mat")
+    score, alignment = sw.align("/test_data/test1.fa", "./test_data/test2.fa")
     assert score == 10
     assert alignment == "BT\nBT"
 
