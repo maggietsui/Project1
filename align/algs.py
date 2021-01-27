@@ -18,7 +18,7 @@ class PairwiseAligner:
     Method that reads in a protein sequence from a fasta file
     Parameters:
         file: Path to fasta file
-    Returns: list containing the sequence from the file
+    Returns: list containing the sequence from the file, in uppercase
     '''
     def read_sequence(self,file):
         f = open(file,'r')
@@ -39,6 +39,7 @@ class PairwiseAligner:
         skiplines = 0
         with open(smat,'r') as fh:
             for line in fh:
+                # Skip header lines
                 if line.startswith("#") | line.startswith("."):
                     skiplines += 1
                 else:
@@ -70,31 +71,31 @@ class PairwiseAligner:
         self.seq2 = self.read_sequence(seq2)
 
     '''
-     Align method: 
+     Method that aligns two sequences
      Parameters:
         seq1: path to first sequence
         seq2: path to second sequence
-        with_score: if true, returns the score of the alignment
-            in addition to the alignments
-        readable: if true, returns the two sequences with lines
-            for readability
-     Returns: returns seq1 and seq2 with best alignment
+        return_alignment: if true, returns the two aligned sequences with 
+        gaps if necessary
+     Returns: Best alignment score and resulting aligned sequences
     '''
     def align(self, seq1, seq2, return_alignment = True):
+        # Exit if empty sequence(s)
         if len(seq1) == 0 | len(seq2) == 0:
             raise ValueError("sequences cannot be empty")
 
         self.set_seqs(seq1, seq2)
 
-        # initialize score matrix with seq1/seq2 
+        # initialize matrices needed for alignment
         self.init_mats()
 
         # loop through matrix, skipping boundary row/col
+        # and fill in each cell
         for i in range(1,len(self.seq1)+1):
             for j in range(1,len(self.seq2)+1):
                 self.fill_in(i,j)
         
-        # traceback and return the score and alignment
+        # traceback and return the best score and alignment
         if return_alignment == True:
             score, alignment = self.do_traceback(return_alignment)
             return score, alignment
@@ -108,16 +109,20 @@ class SmithWaterman(PairwiseAligner):
 
     '''
     Method to initialize the score-keeping and traceback matrices.
-    seq1 is initialized on the rows, while seq2 on the columns
-    Parameters:
-    Returns: score, gap X, gap Y, and traceback matrices
+    seq1 is initialized on the rows, while seq2 on the columns.
+    Matrices are of size M+1 x N+1, where M and N are the lengths
+    of seq1 and seq2
+    Returns: None, sets the instance's score, gap X, gap Y, and 
+    traceback matrices
     '''
     def init_mats(self):
+        # Create empty numpy arrays
         self.scores = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
         self.traceback = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1),dtype=object)
         self.gapX = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
         self.gapY = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
         
+        # Set the first row and column
         self.scores[:,0] = 0
         self.scores[0,:] = 0
         
@@ -129,12 +134,12 @@ class SmithWaterman(PairwiseAligner):
 
 
     '''
-    Fills in score in the scores matrix and arrow in the traceback
+    Method that fills in score in the scores matrix and arrow in the traceback
     for the current cell
     Parameters:
-        i: row index
-        j: col index
-    Returns: score/arrows are filled in
+        i: current row index
+        j: current col index
+    Returns: None, score/arrows are filled in
     '''
     def fill_in(self, i, j):
         # calculate match score
@@ -161,7 +166,8 @@ class SmithWaterman(PairwiseAligner):
         for key in score_dict.keys():
             if score_dict[key] < 0:
                 score_dict[key] = 0
-        #print(score_dict)
+
+        # fill in the matrices with the corresponding value
         self.scores[i,j] = score_dict["M"]
         self.gapX[i,j] = score_dict["Ix"]
         self.gapY[i,j] = score_dict["Iy"]
@@ -195,8 +201,16 @@ class SmithWaterman(PairwiseAligner):
         if max_score >= self.scores[self.max]:
             self.max = (i,j)
 
-
+    '''
+    Method that uses the traceback matrix to get the optimal 
+    alignment score and reconstruct the alignment
+    Parameters:
+        return_alignment: whether or not to return the two
+        aligned sequences
+    Returns: The max score in the matrix and the aligned sequences
+    '''
     def do_traceback(self, return_alignment):
+        # Start at the cell with the max score
         i = self.max[0]
         j = self.max[1]
 
@@ -207,19 +221,22 @@ class SmithWaterman(PairwiseAligner):
         
         if return_alignment == True:
             # start traceback at max value
-            current_val = self.scores[self.max[0], self.max[1]]
+            #current_val = self.scores[self.max[0], self.max[1]]
             str1 = ""
             str2 = ""
+            # Stop when the current cell is None, which means the score was 0
             while self.traceback[i,j] != None:
                 if self.traceback[i,j] == "match" or self.traceback[i,j] == "endgapx" or self.traceback[i,j] == "endgapy":
                     str1 = self.seq1[i-1] + str1
                     str2 = self.seq2[j-1] + str2
                     i = i-1
                     j = j-1
+                # Add a gap in x direction (seq2)
                 elif self.traceback[i,j] == "opengapx" or self.traceback[i,j] == "extendgapx":
                     str2 = "-" + str2
                     str1 = self.seq1[i-1] + str1
                     i = i-1
+                # Add a gap in y direction (seq1)
                 elif self.traceback[i,j] == "opengapy" or self.traceback[i,j] == "extendgapy":
                     str2 = self.seq2[j-1] + str1
                     str1 = "-" + str1
@@ -239,6 +256,7 @@ class NeedlemanWunsch(PairwiseAligner):
         self.gapX = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
         self.gapY = np.empty(shape=(len(self.seq1)+1,len(self.seq2)+1))
         
+        # initialize the first rows/cols of the matrices to boundary values
         self.scores[0,0] = 0
         self.scores[0,1:] = float("-inf")
         self.scores[1:,0] = float("-inf")
@@ -253,6 +271,7 @@ class NeedlemanWunsch(PairwiseAligner):
         
         self.traceback[0,1:] = "extendgapy"
         self.traceback[1:,0] = "extendgapx"
+
     '''
     Fills in score in the scores matrix and arrow in the traceback
     for the current cell
@@ -290,7 +309,6 @@ class NeedlemanWunsch(PairwiseAligner):
         max_score = max(score_dict.values())
 
         # assign arrows
-
         # for max score, get the cell that it came from
         # to resolve ties, a match is preferred, then X gap, then Y gap
         max_mats = [k for k,v in score_dict.items() if v == max_score]
@@ -313,21 +331,19 @@ class NeedlemanWunsch(PairwiseAligner):
                 self.traceback[i,j] = "extendgapy"
 
     def do_traceback(self, return_alignment):
+        # start in the bottom right cell
         i = len(self.scores[:,0]) - 1
         j = len(self.scores[0,:]) - 1
         
-        # score is the biggest value in the bottom right cell
+        # score is the biggest value 
         fin_score = max(self.scores[i,j], self.gapX[i,j], self.gapY[i,j])
 
         if return_alignment == True:
             str1 = ""
             str2 = ""
 
-            # traceback until you reach 0,0
+            # traceback until you reach (0,0)
             while i > 0 or j > 0:
-                #print(i,j)
-                #print(self.traceback[i,j])
-                #print(str1 + '\n' + str2)
                 if self.traceback[i,j] == "match" or self.traceback[i,j] == "endgapx" or self.traceback[i,j] == "endgapy":
                     str1 = self.seq1[i-1] + str1
                     str2 = self.seq2[j-1] + str2
