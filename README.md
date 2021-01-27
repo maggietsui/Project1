@@ -3,20 +3,13 @@
 
 ![BuildStatus](https://github.com/maggietsui/Project1/workflows/HW1/badge.svg?event=push)
 
-In this assignment, you will implement two classical alignment algorithms and then evaluate each algorithm’s performance with a range of parameters. There are two parts to this assignment and Part 2 requires completion of Part 1. We recommend reading through both Part 1 and Part 2 before beginning this assignment. 
+## Documentation
 
-* Part 1 - API and implementation
-* Part 2 - Evaluating alignments
+### PairwiseAligner
+A parent class used to align two sequences
 
-### main
-Runs all code in align/\_\_main\_\_.py, useful for part 2
-```
-python -m align
-```
-
-### testing
-Testing is as simple as running
-```
-python -m pytest test/*
-```
-from the root directory of this project.
+#### read_sequence(self,file):
+Method that reads in a protein sequence from a fasta file
+Parameters:
+    file: Path to fasta file
+Returns: list containing the sequence from the file, in uppercase
