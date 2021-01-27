@@ -56,6 +56,9 @@ class PairwiseAligner:
     def get_score_mat(self):
         return self.smat
     
+    def set_score_mat(self, smat):
+        self.smat = self.read_score_matrix(smat)
+
     def set_gap_open(self, gap_open):
         self.gap_open = gap_open
     
