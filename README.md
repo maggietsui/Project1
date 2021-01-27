@@ -5,11 +5,11 @@
 
 ## Documentation
 
-### PairwiseAligner
+### PairwiseAligner Class
 A parent class used to align two sequences
 
 #### read_sequence(self,file):
-Method that reads in a protein sequence from a fasta file
-Parameters:
-    file: Path to fasta file
+Method that reads in a protein sequence from a fasta file  
+Parameters:  
+	file: Path to fasta file  
 Returns: list containing the sequence from the file, in uppercase
