@@ -2,6 +2,21 @@
 
 ![BuildStatus](https://github.com/maggietsui/Project1/workflows/HW1/badge.svg?event=push)
 
+All code for the PairwiseAligner, SmithWaterman, and NeedlemanWunsch classes are in align/algs.py  
+
+For example, an instance of SmithWaterman can be created by running
+```
+sw = SmithWaterman("/path/to/score/matrix")
+
+```
+
+There are setter methods to set the reference score matrix. To align two sequences, run
+```
+scores, alignment = sw.align("/path/to/seq1", "path/to/seq2")
+
+```
+
+
 ## Documentation
 
 ### PairwiseAligner Class
